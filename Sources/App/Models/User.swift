@@ -9,7 +9,7 @@ import Vapor
 import Fluent
 
 final class User: Model, Content {
-    static let schema = "user"
+    static let schema = "users"
     
     @ID
     var id: UUID?
@@ -41,6 +41,16 @@ final class User: Model, Content {
     func convertToPublic() -> Public {
         return Public(id: id, email: email)
     }
+    
+    static func create(from credentials: UserRegister) throws -> User {
+        return User(email: credentials.email,
+                    password: try Bcrypt.hash(credentials.password))
+    }
+    
+    func createToken() throws -> Token {
+        return try Token(value: [UInt8].random(count: 16).base64,
+                         userID: requireID())
+    }
 }
 
 extension EventLoopFuture where Value: User {
@@ -48,5 +58,14 @@ extension EventLoopFuture where Value: User {
         return self.map { user in
             return user.convertToPublic()
         }
+    }
+}
+
+extension User: ModelAuthenticatable {
+    static var usernameKey = \User.$email
+    static var passwordHashKey = \User.$password
+    
+    func verify(password: String) throws -> Bool {
+        try Bcrypt.verify(password, created: self.password)
     }
 }
