@@ -7,7 +7,7 @@
 
 import Vapor
 
-struct NewSecction: Content {
-    let token: Token
+struct NewSession: Content {
+    let token: String
     let user: User.Public
 }
