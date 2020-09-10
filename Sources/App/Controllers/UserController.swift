@@ -9,7 +9,7 @@ import Vapor
 
 struct UserController: RouteCollection {
     
-    func boot(routes: RoutesBuilder) {
+    func boot(routes: RoutesBuilder) throws {
         
     }
 }
