@@ -17,7 +17,7 @@ struct UserController: RouteCollection {
         let tokenProtected = usersRoute.grouped(Token.authenticator())
         tokenProtected.get("me", use: getCurrentUser)
         
-        let passwordProtected = usersRoute.grouped(User.authenticator())
+        let passwordProtected = usersRoute.grouped(UserAunthenticator())
         passwordProtected.post("login", use: login)
     }
     
