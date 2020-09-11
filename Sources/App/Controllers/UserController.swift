@@ -6,6 +6,7 @@
 //
 
 import Vapor
+import Fluent
 
 struct UserController: RouteCollection {
     
@@ -15,6 +16,9 @@ struct UserController: RouteCollection {
         
         let tokenProtected = usersRoute.grouped(Token.authenticator())
         tokenProtected.get("me", use: getCurrentUser)
+        
+        let passwordProtected = usersRoute.grouped(User.authenticator())
+        passwordProtected.post("login", use: login)
     }
     
     private func createUser(req: Request) throws -> EventLoopFuture<NewSession> {
@@ -22,28 +26,42 @@ struct UserController: RouteCollection {
         let userSignup = try req.content.decode(UserRegister.self)
         let user = try User.create(from: userSignup)
         var token: Token!
-            
-        return user.save(on: req.db)
-        .flatMap {
-            guard let newToken = try? user.createToken() else {
-                return req.eventLoop.future(error: Abort(.internalServerError))
+        return checkIfUserExists(userSignup.email, req: req)
+            .flatMap { exists in
+                if exists {
+                    return req.eventLoop.future(error: Abort(.conflict))
+                } else {
+                    return user.save(on: req.db)
+                }
+            }.flatMap {
+                guard let newToken = try? user.createToken() else {
+                    return req.eventLoop.future(error: Abort(.internalServerError))
+                }
+                token = newToken
+                return token.save(on: req.db)
+            }.flatMapThrowing {
+                NewSession(token: token.value, user: user.convertToPublic())
             }
-            token = newToken
-            return token.save(on: req.db)
-        }.flatMapThrowing {
-            NewSession(token: token.value, user: user.convertToPublic())
-        }
     }
     
     private func getCurrentUser(req: Request) throws -> User.Public {
         return try req.auth.require(User.self).convertToPublic()
     }
     
-//    private func checkIfUserExists(_ email: String, req: Request) -> EventLoopFuture<Bool> {
-//        User.query(on: req.db)
-//            .filter(\.$email == email)
-//            //.filter(\.$email == email)
-//            .first()
-//            .map { $0 != nil }
-//    }
+    private func checkIfUserExists(_ email: String, req: Request) -> EventLoopFuture<Bool> {
+        User.query(on: req.db)
+            .filter(\.$email == email)
+            .first()
+            .map { $0 != nil }
+    }
+    
+    private func login(req: Request) throws -> EventLoopFuture<NewSession> {
+        let user = try req.auth.require(User.self)
+        let token = try user.createToken()
+        
+        return token.save(on: req.db)
+            .flatMapThrowing { _ in
+                return NewSession(token: token.value, user: user.convertToPublic())
+        }
+    }
 }
