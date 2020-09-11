@@ -50,20 +50,41 @@ struct UserController: RouteCollection {
     }
     
     private func checkIfUserExists(_ email: String, req: Request) -> EventLoopFuture<Bool> {
-        User.query(on: req.db)
+        return User.query(on: req.db)
             .filter(\.$email == email)
             .first()
             .map { $0 != nil }
     }
     
+    private func checkIfTokenExists(uuid: UUID, req: Request) -> EventLoopFuture<Bool> {
+        let future = Token.query(on: req.db)
+            .filter(\.$user.$id == uuid)
+            .first()
+            .map { $0 != nil }
+        return future
+    }
+    
     private func login(req: Request) throws -> EventLoopFuture<NewSession> {
         let user = try req.auth.require(User.self)
         let token = try user.createToken()
+        let userId = try user.requireID()
         
-        return token.save(on: req.db)
-            .flatMapThrowing { _ in
-                return NewSession(token: token.value, user: user.convertToPublic())
+        let future = checkIfTokenExists(uuid: userId, req: req)
+            .flatMap { exists in
+                if exists {
+                    return Token.query(on: req.db)
+                        .filter(\.$user.$id == userId)
+                        .delete()
+                } else {
+                    return req.eventLoop.future()
+                }
+        }.flatMap {
+            return token.save(on: req.db)
+        }.flatMapThrowing {
+            return NewSession(token: token.value, user: user.convertToPublic())
         }
+        
+        return future
     }
     
     private func logout(req: Request) throws -> EventLoopFuture<HTTPStatus> {
