@@ -19,7 +19,7 @@ final class User: Model, Content, Authenticatable {
     
     @Field(key: "password")
     var password: String
-    
+
     init() {}
     
     init(id: UUID? = nil, email: String, password: String) {
@@ -67,6 +67,5 @@ struct UserAunthenticator: CredentialsAuthenticator {
                     request.auth.login(user)
                 }
         }
-        
     }
 }

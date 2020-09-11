@@ -16,6 +16,7 @@ struct UserController: RouteCollection {
         
         let tokenProtected = usersRoute.grouped(Token.authenticator())
         tokenProtected.get("me", use: getCurrentUser)
+        tokenProtected.post("logout", use: logout)
         
         let passwordProtected = usersRoute.grouped(UserAunthenticator())
         passwordProtected.post("login", use: login)
@@ -62,6 +63,16 @@ struct UserController: RouteCollection {
         return token.save(on: req.db)
             .flatMapThrowing { _ in
                 return NewSession(token: token.value, user: user.convertToPublic())
+        }
+    }
+    
+    private func logout(req: Request) throws -> EventLoopFuture<HTTPStatus> {
+        let user = try req.auth.require(User.self).requireID()
+        return Token.query(on: req.db)
+            .filter(\.$user.$id == user)
+            .delete()
+            .flatMapThrowing { _ -> HTTPStatus in
+                return .ok
         }
     }
 }
