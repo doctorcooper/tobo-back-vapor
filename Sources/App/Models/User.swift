@@ -53,13 +53,13 @@ final class User: Model, Content {
     }
 }
 
-extension EventLoopFuture where Value: User {
-    func convertToPublic() -> EventLoopFuture<User.Public> {
-        return self.map { user in
-            return user.convertToPublic()
-        }
-    }
-}
+//extension EventLoopFuture where Value: User {
+//    func convertToPublic() -> EventLoopFuture<User.Public> {
+//        return self.map { user in
+//            return user.convertToPublic()
+//        }
+//    }
+//}
 
 extension User: ModelAuthenticatable {
     static var usernameKey = \User.$email
