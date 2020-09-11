@@ -8,7 +8,7 @@
 import Vapor
 import Fluent
 
-final class Task: Model {
+final class Task: Model, Content {
     static let schema = "tasks"
     
     @ID
@@ -34,4 +34,9 @@ final class Task: Model {
         self.createdAt = createdAt
         self.$user.id = userID
     }
+}
+
+final class TaskDTO: Content {
+    let title: String
+    let isDone: Bool
 }
