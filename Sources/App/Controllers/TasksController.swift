@@ -15,6 +15,7 @@ struct TasksController: RouteCollection {
         let tokenProtected = taskRoute.grouped(Token.authenticator())
         
         tokenProtected.get("/", use: getAllTasks)
+        tokenProtected.post("create", use: createTask)
     }
 
     private func getAllTasks(req: Request) throws -> EventLoopFuture<[Task]> {
