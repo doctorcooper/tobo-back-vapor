@@ -17,7 +17,7 @@ final class Task: Model, Content {
     @Field(key: "title")
     var title: String
     
-    @Field(key: "isDone")
+    @Field(key: "is_done")
     var isDone: Bool
     
     @Timestamp(key: "created_at", on: .create)
