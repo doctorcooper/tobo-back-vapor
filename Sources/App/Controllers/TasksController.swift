@@ -26,13 +26,15 @@ struct TasksController: RouteCollection {
     }
     
     private func createTask(req: Request) throws -> EventLoopFuture<Task> {
-        let userID = try req.auth.require(User.self).requireID()
+        let userID = try req.auth.require(User.self)
         
         let taskDTO = try req.content.decode(TaskDTO.self)
-        let task = Task(title: taskDTO.title, isDone: taskDTO.isDone, createdAt: nil, userID: userID)
+        let task = try Task(title: taskDTO.title, isDone: taskDTO.isDone,
+                            createdAt: nil, userID: userID.requireID())
         
-        return task.save(on: req.db).flatMapThrowing {
-            return task
+        return task.save(on: req.db)
+            .flatMapThrowing {
+                return task
         }
     }
     
