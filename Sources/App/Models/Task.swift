@@ -31,6 +31,7 @@ final class Task: Model, Content {
     init(id: UUID? = nil, title: String, isDone: Bool, createdAt: Date?, userID: User.IDValue) {
         self.id = id
         self.title = title
+        self.isDone = isDone
         self.createdAt = createdAt
         self.$user.id = userID
     }
