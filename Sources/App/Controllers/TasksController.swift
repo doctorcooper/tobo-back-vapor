@@ -14,7 +14,7 @@ struct TasksController: RouteCollection {
         let taskRoute = routes.grouped("task")
         let tokenProtected = taskRoute.grouped(Token.authenticator())
         
-        tokenProtected.get("/", use: getAllTasks)
+        tokenProtected.get(use: getAllTasks)
         tokenProtected.post("create", use: createTask)
     }
 
