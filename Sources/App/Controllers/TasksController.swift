@@ -16,6 +16,8 @@ struct TasksController: RouteCollection {
         
         tokenProtected.get(use: getAllTasks)
         tokenProtected.post("create", use: createTask)
+        tokenProtected.put("update", ":taskID", use: updateTask)
+        tokenProtected.delete("delete", ":taskID", use: deleteTask)
     }
 
     private func getAllTasks(req: Request) throws -> EventLoopFuture<[Task]> {
@@ -26,11 +28,11 @@ struct TasksController: RouteCollection {
     }
     
     private func createTask(req: Request) throws -> EventLoopFuture<Task> {
-        let userID = try req.auth.require(User.self)
+        let user = try req.auth.require(User.self)
         
         let taskDTO = try req.content.decode(TaskDTO.self)
         let task = try Task(title: taskDTO.title, isDone: taskDTO.isDone,
-                            createdAt: nil, userID: userID.requireID())
+                            createdAt: nil, userID: user.requireID())
         
         return task.save(on: req.db)
             .flatMapThrowing {
@@ -38,4 +40,23 @@ struct TasksController: RouteCollection {
         }
     }
     
+    private func updateTask(req: Request) throws -> EventLoopFuture<Task> {
+        let updatedTask = try req.content.decode(Task.self)
+        return Task.find(req.parameters.get(":taskID"), on: req.db)
+            .unwrap(or: Abort(.notFound))
+            .flatMap { task in
+                task.title = updatedTask.title
+                task.isDone = updatedTask.isDone
+                return task.save(on: req.db).map { task }
+        }
+    }
+    
+    private func deleteTask(req: Request) throws -> EventLoopFuture<HTTPStatus> {
+        return Task.find(req.parameters.get(":taskID"), on: req.db)
+            .unwrap(or: Abort(.notFound))
+            .flatMap { task in
+                task.delete(on: req.db)
+                    .transform(to: .noContent)
+        }
+    }
 }
