@@ -15,9 +15,9 @@ struct TasksController: RouteCollection {
         let tokenProtected = taskRoute.grouped(Token.authenticator())
         
         tokenProtected.get(use: getAllTasks)
-        tokenProtected.post("create", use: createTask)
-        tokenProtected.put("update", ":taskID", use: updateTask)
-        tokenProtected.delete("delete", ":taskID", use: deleteTask)
+        tokenProtected.post(use: createTask)
+        tokenProtected.put(":taskID", use: updateTask)
+        tokenProtected.delete(":taskID", use: deleteTask)
     }
 
     private func getAllTasks(req: Request) throws -> EventLoopFuture<[Task]> {
@@ -42,7 +42,7 @@ struct TasksController: RouteCollection {
     
     private func updateTask(req: Request) throws -> EventLoopFuture<Task> {
         let updatedTask = try req.content.decode(Task.self)
-        return Task.find(req.parameters.get(":taskID"), on: req.db)
+        return Task.find(req.parameters.get("taskID"), on: req.db)
             .unwrap(or: Abort(.notFound))
             .flatMap { task in
                 task.title = updatedTask.title
@@ -52,7 +52,7 @@ struct TasksController: RouteCollection {
     }
     
     private func deleteTask(req: Request) throws -> EventLoopFuture<HTTPStatus> {
-        return Task.find(req.parameters.get(":taskID"), on: req.db)
+        return Task.find(req.parameters.get("taskID"), on: req.db)
             .unwrap(or: Abort(.notFound))
             .flatMap { task in
                 task.delete(on: req.db)
