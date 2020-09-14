@@ -41,7 +41,7 @@ struct TasksController: RouteCollection {
     }
     
     private func updateTask(req: Request) throws -> EventLoopFuture<Task> {
-        let updatedTask = try req.content.decode(Task.self)
+        let updatedTask = try req.content.decode(TaskDTO.self)
         return Task.find(req.parameters.get("taskID"), on: req.db)
             .unwrap(or: Abort(.notFound))
             .flatMap { task in
