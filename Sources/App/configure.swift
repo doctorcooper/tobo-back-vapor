@@ -16,6 +16,10 @@ public func configure(_ app: Application) throws {
     
     app.logger.logLevel = .debug
     
+    // Configure Leaf
+    app.views.use(.leaf)
+    app.leaf.cache.isEnabled = app.environment.isRelease
+    
     app.migrations.add(CreateUsers())
     app.migrations.add(CreateTokens())
     app.migrations.add(CreateTasks())
