@@ -38,6 +38,8 @@ final class Task: Model, Content {
 }
 
 final class TaskDTO: Content {
+    let id: UUID
     let title: String
+    let createdAt: Date
     let isDone: Bool
 }
