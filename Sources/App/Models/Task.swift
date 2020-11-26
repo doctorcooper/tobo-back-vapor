@@ -20,7 +20,7 @@ final class Task: Model, Content {
     @Field(key: "is_done")
     var isDone: Bool
     
-    @Timestamp(key: "created_at", on: .create)
+    @Field(key: "created_at")
     var createdAt: Date?
     
     @Parent(key: "user_id")
