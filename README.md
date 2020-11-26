@@ -4,4 +4,4 @@ Implemented:
 - Database
 - Authorization
 
-I have front-end part wrotten on swift for iOS.
+I have front-end part written on swift for iOS.
