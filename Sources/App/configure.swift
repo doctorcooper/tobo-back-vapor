@@ -9,12 +9,22 @@ public func configure(_ app: Application) throws {
 
     app.databases.use(.postgres(
         hostname: Environment.get("DATABASE_HOST") ?? "localhost",
-        username: Environment.get("DATABASE_USERNAME") ?? "vapor_username",
-        password: Environment.get("DATABASE_PASSWORD") ?? "vapor_password",
-        database: Environment.get("DATABASE_NAME") ?? "vapor_database"
+        username: Environment.get("DATABASE_USERNAME") ?? "vapor",
+        password: Environment.get("DATABASE_PASSWORD") ?? "vapor",
+        database: Environment.get("DATABASE_NAME") ?? "vapor"
     ), as: .psql)
-
-    app.migrations.add(CreateTodo())
+    
+    app.logger.logLevel = .debug
+    
+    // Configure Leaf
+    app.views.use(.leaf)
+    app.leaf.cache.isEnabled = app.environment.isRelease
+    
+    app.migrations.add(CreateUsers())
+    app.migrations.add(CreateTokens())
+    app.migrations.add(CreateTasks())
+    
+    try app.autoMigrate().wait()
 
     // register routes
     try routes(app)
